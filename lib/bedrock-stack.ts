@@ -5,10 +5,11 @@ import * as apigwv2 from 'aws-cdk-lib/aws-apigatewayv2';
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
-import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
-import { v4 as uuidv4 } from 'uuid';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 export class BedrockStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -65,9 +66,14 @@ export class BedrockStack extends cdk.Stack {
       },
     });
 
+    const lambdaLayer = lambda.LayerVersion.fromLayerVersionArn(
+      this,
+      'BedrockLambdaLayer',
+      'arn:aws:lambda:us-east-1:336392948345:layer:AWSSDKPandas-Python312-Arm64:6' // https://aws-sdk-pandas.readthedocs.io/en/stable/layers.html
+    );
     const bedrockLambdaFunction = new lambda.Function(this, 'BedrockLambdaFunction', {
       functionName: `bedrock-function`,
-      code: lambda.Code.fromAsset(path.join(__dirname, `../src/lambda`)),
+      code: lambda.Code.fromAsset(path.join(__dirname, `../src/lambda/bedrock`)),
       handler: 'index.lambda_handler',
       runtime: lambda.Runtime.PYTHON_3_12,
       timeout: cdk.Duration.seconds(60),
@@ -75,9 +81,11 @@ export class BedrockStack extends cdk.Stack {
       environment: {
         S3_BUCKET_NAME: bucket.bucketName,
         LOG_LEVEL: 'INFO',
+        LINE_CHANNEL_SECRET: process.env.LINE_CHANNEL_SECRET || '',
+        LINE_CHANNEL_ACCESS_TOKEN: process.env.LINE_CHANNEL_ACCESS_TOKEN || '',
       },
       role: bedrockLambdaFunctionRole,
-      //tracing: lambda.Tracing.ACTIVE,
+      layers: [lambdaLayer],
     });
 
     const api = new apigwv2.HttpApi(this, 'BedrockLambdaApi', {
