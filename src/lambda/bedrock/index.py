@@ -32,7 +32,7 @@ def lambda_handler(event, context):
         logLevel = os.environ.get("LOG_LEVEL", "INFO")
         logger.setLevel(logLevel)
 
-        # 署名の検証¥
+        # 署名の検証
         header_signature = event["headers"]["x-line-signature"]
         verification_result = verify_signature(header_signature, event["body"])
         if not verification_result:
@@ -122,7 +122,7 @@ def invoke_titan_image(prompt):
             }
         )
         response = bedrock_runtime.invoke_model(
-            modelId="amazon.titan-image-generator-v1", body=request
+            modelId="amazon.titan-image-generator-v2:0", body=request
         )
         response_body = json.loads(response["body"].read())
         base64_image_data = response_body["images"][0]

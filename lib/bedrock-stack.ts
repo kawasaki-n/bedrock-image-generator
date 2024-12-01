@@ -49,7 +49,7 @@ export class BedrockStack extends cdk.Stack {
               effect: iam.Effect.ALLOW,
               actions: ['bedrock:InvokeModel'],
               resources: [
-                'arn:aws:bedrock:us-east-1::foundation-model/amazon.titan-image-generator-v1',
+                'arn:aws:bedrock:us-east-1::foundation-model/amazon.titan-image-generator-v2:0',
               ],
             }),
           ],
