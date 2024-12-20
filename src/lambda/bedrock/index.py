@@ -14,6 +14,7 @@ from logging import getLogger, INFO
 from datetime import datetime
 
 REPLY_ENDPOINT = "https://api.line.me/v2/bot/message/reply"
+LOADING_ENDPOINT = "https://api.line.me/v2/bot/chat/loading/start"
 
 logger = getLogger()
 logger.setLevel(INFO)
@@ -39,6 +40,14 @@ def lambda_handler(event, context):
             return {"statusCode": 401, "body": "署名の検証でエラーが発生しました。"}
         logger.info("signature verification was passed.")
 
+        # 入力を受け取る
+        body = json.loads(event["body"])
+        body_event = body.get("events")[0]
+
+        # LINEにローディングのアニメーションを表示
+        userId = body_event.get("source").get("userId")
+        send_loading(userId)
+
         # 作成したS3バケット名を環境変数から取得
         bucket_name = os.environ.get("S3_BUCKET_NAME")
         if bucket_name is None:
@@ -46,10 +55,7 @@ def lambda_handler(event, context):
 
         # S3に保存するためのランダムなオブジェクト名を生成
         random_uuid = uuid.uuid4().hex
-        # 入力を受け取る
-        body = json.loads(event["body"])
-        event = body.get("events")[0]
-        input_text = event.get("message").get("text")
+        input_text = body_event.get("message").get("text")
 
         # Amazon Bedrockで用意した基盤モデルへAPIリクエストし、画像を生成する
         base64_image_data = invoke_titan_image(input_text)
@@ -74,7 +80,7 @@ def lambda_handler(event, context):
 
         # LINEに返信する
         data = {
-            "replyToken": event.get("replyToken"),
+            "replyToken": body_event.get("replyToken"),
             "messages": [
                 {
                     "type": "image",
@@ -155,4 +161,22 @@ def reply(data):
         logger.info(f"response: {response}")
     except ClientError as e:
         logger.error(f"Error happnend when reply: {e}")
+        raise
+
+def send_loading(userId):
+    try:
+        if userId is None:
+            return
+        channel_access_token = os.environ.get("LINE_CHANNEL_ACCESS_TOKEN")
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer {}'.format(channel_access_token)
+        }
+        body = {
+            'chatId': userId,
+        }
+        response = requests.post(LOADING_ENDPOINT, json=body, headers=headers)
+        logger.info(f"response: {response}")
+    except ClientError as e:
+        logger.error(f"Error happnend when send loading: {e}")
         raise
