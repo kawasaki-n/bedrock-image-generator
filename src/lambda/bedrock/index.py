@@ -27,6 +27,8 @@ s3 = boto3.client("s3", config=my_config)
 
 
 def lambda_handler(event, context):
+    body = json.loads(event["body"])
+    body_event = body.get("events")[0]
     try:
         logger.info("start")
         logger.info("event: {}".format(event))
@@ -39,10 +41,6 @@ def lambda_handler(event, context):
         if not verification_result:
             return {"statusCode": 401, "body": "署名の検証でエラーが発生しました。"}
         logger.info("signature verification was passed.")
-
-        # 入力を受け取る
-        body = json.loads(event["body"])
-        body_event = body.get("events")[0]
 
         # LINEにローディングのアニメーションを表示
         userId = body_event.get("source").get("userId")
@@ -97,7 +95,7 @@ def lambda_handler(event, context):
         logger.exception(str(e))
         # 画像を生成できなかった旨を返信
         data = {
-            "replyToken": event.get("replyToken"),
+            "replyToken": body_event.get("replyToken"),
             "messages": [
                 {
                     "type": "text",
