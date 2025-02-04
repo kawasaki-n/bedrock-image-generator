@@ -7,8 +7,18 @@ on:
 jobs:
   cdk-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ap-northeast-1
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_DEPLOY_ROLE }}
+          role-session-name: myGitHubActions
+
       - name: Use Node.js 18.x
         uses: actions/setup-node@v4
         with:
@@ -23,17 +33,10 @@ jobs:
       - name: CDK Diff Check
         if: contains(github.event_name, 'pull_request')
         run: npm run cdk:diff
-        env:
-          AWS_DEFAULT_REGION: 'ap-northeast-1'
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
       - name: CDK Deploy
         if: contains(github.event_name, 'push')
         run: npm run cdk:deploy
         env:
-          AWS_DEFAULT_REGION: 'ap-northeast-1'
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
           LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
