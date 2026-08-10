@@ -19,6 +19,33 @@ updates:
     schedule:
       interval: 'weekly'
     groups:
-      npm-dependencies:
+      typescript-eslint:
         patterns:
-          - '*'
+          - '@typescript-eslint/*'
+
+      eslint-plugins:
+        patterns:
+          - 'eslint-plugin-*'
+          - 'eslint-import-resolver-*'
+
+      jest:
+        patterns:
+          - 'jest'
+          - '@types/jest'
+          - 'ts-jest'
+
+      prettier:
+        patterns:
+          - 'prettier'
+          - 'eslint-config-prettier'
+
+      aws-cdk:
+        patterns:
+          - 'aws-cdk'
+          - 'aws-cdk-lib'
+          - 'constructs'
+
+      aws-sdk:
+        patterns:
+          - 'aws-sdk'
+          - '@types/aws-lambda'
