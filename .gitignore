@@ -10,3 +10,5 @@ cdk.out
 .env
 .memo
 /docs
+
+.DS_Store
