@@ -19,10 +19,10 @@ jobs:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_DEPLOY_ROLE }}
           role-session-name: myGitHubActions
 
-      - name: Use Node.js 18.x
+      - name: Use Node.js 22.x
         uses: actions/setup-node@v7
         with:
-          node-version: '18'
+          node-version: '22'
 
       - name: Setup dependencies
         run: npm ci
